@@ -68,18 +68,19 @@ function _insertConference(
         recentList: IConference[],
         newConference: IConference
 ) {
-    // Add start time to conference.
-    newConference.startTime = Date.now();
-
-    newConference.room = _cleanRoomName(newConference.room);
+    const conferenceToStore: IConference = {
+        ...newConference,
+        room: _cleanRoomName(newConference.room),
+        startTime: Date.now()
+    };
 
     // Remove same conference.
     const newRecentList = recentList.filter(
-        conference => _cleanRoomName(conference.room) !== newConference.room
-            || conference.serverURL !== newConference.serverURL);
+        conference => _cleanRoomName(conference.room) !== conferenceToStore.room
+            || conference.serverURL !== conferenceToStore.serverURL);
 
     // Add the conference at the beginning.
-    newRecentList.unshift(newConference);
+    newRecentList.unshift(conferenceToStore);
 
     return newRecentList;
 }
