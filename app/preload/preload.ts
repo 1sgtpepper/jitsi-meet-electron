@@ -11,7 +11,8 @@ const whitelistedIpcChannels = [
     'restore-meeting-window',
     'open-meeting-window',
     'close-meeting-window',
-    'navigate-to-conference'
+    'navigate-to-conference',
+    'set-default-server'
 ];
 
 ipcRenderer.setMaxListeners(0);
