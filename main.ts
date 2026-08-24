@@ -37,6 +37,26 @@ const rootDir = path.resolve(__dirname, '..');
 
 const showDevTools = Boolean(process.env.SHOW_DEV_TOOLS) || (process.argv.indexOf('--show-dev-tools') > -1);
 
+/**
+ * Parse --defaultServer CLI argument (supports both --defaultServer=URL and --defaultServer URL).
+ * In dev mode via `npm start`, arguments passed via `npm start -- --defaultServer` are consumed
+ * by `concurrently` and never reach the Electron process. Use the JITSI_DEFAULT_SERVER
+ * environment variable for dev mode instead (mirrors the SHOW_DEV_TOOLS pattern).
+ * Dev usage: $env:JITSI_DEFAULT_SERVER='https://example.com'; npm start
+ */
+const defaultServerArgIdx = process.argv.findIndex(arg => arg.startsWith('--defaultServer'));
+let defaultServerURL: string | null = process.env.JITSI_DEFAULT_SERVER || null;
+
+if (defaultServerArgIdx > -1) {
+    const arg = process.argv[defaultServerArgIdx];
+
+    if (arg.includes('=')) {
+        defaultServerURL = arg.split('=')[1] || null;
+    } else if (process.argv[defaultServerArgIdx + 1] && !process.argv[defaultServerArgIdx + 1].startsWith('--')) {
+        defaultServerURL = process.argv[defaultServerArgIdx + 1];
+    }
+}
+
 // Fix screen-sharing thumbnails being missing sometimes.
 // https://github.com/electron/electron/issues/44504
 const disabledFeatures = [
@@ -493,7 +513,9 @@ ipcMain.on('renderer-ready', event => {
                 .send('protocol-data-msg', protocolDataForFrontApp);
         }
 
-
+        if (defaultServerURL) {
+            mainWindow.webContents.send('set-default-server', defaultServerURL);
+        }
     }
 
     // Meeting window is ready.
