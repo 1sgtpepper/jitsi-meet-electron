@@ -1,4 +1,3 @@
-
 import React, { Component } from 'react';
 import { WithTranslation, withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
@@ -40,6 +39,22 @@ class ServerURLField extends Component<IProps, IServerURLFieldState> {
 
         this._onServerURLChange = this._onServerURLChange.bind(this);
         this._onServerURLSubmit = this._onServerURLSubmit.bind(this);
+    }
+
+    /**
+     * Implements React's {@link Component#componentDidUpdate()}.
+     *
+     * Syncs the local input state when the server URL is changed externally,
+     * e.g. via the --defaultServer CLI argument dispatched from the main
+     * process after the component is already mounted.
+     *
+     * @param {IProps} prevProps - The previous props.
+     * @returns {void}
+     */
+    componentDidUpdate(prevProps: IProps) {
+        if (prevProps._serverURL !== this.props._serverURL) {
+            this.setState({ serverURL: this.props._serverURL });
+        }
     }
 
     /**

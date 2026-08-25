@@ -5,6 +5,7 @@ import { Dispatch } from 'redux';
 import type { IState } from '../../../types';
 import config from '../../config';
 import { addRecentListEntry } from '../../recent-list/actions';
+import { setServerURL } from '../../settings/actions';
 import { createConferenceObjectFromURL } from '../../utils';
 import { Welcome } from '../../welcome';
 
@@ -17,7 +18,7 @@ interface IProps {
  * Main component encapsulating the Launcher application.
  */
 class App extends Component<IProps> {
-    _removeListener: (() => void) | undefined;
+    _listeners: Array<() => void> = [];
 
     /**
      * Initializes a new {@code App} instance.
@@ -31,6 +32,7 @@ class App extends Component<IProps> {
 
         this._listenOnProtocolMessages
             = this._listenOnProtocolMessages.bind(this);
+        this._onSetDefaultServer = this._onSetDefaultServer.bind(this);
     }
 
     /**
@@ -40,7 +42,18 @@ class App extends Component<IProps> {
      */
     componentDidMount() {
         // start listening on this events
-        this._removeListener = window.jitsiElectronApp.ipc.addListener('protocol-data-msg', this._listenOnProtocolMessages);
+        const removeProtocolListener
+            = window.jitsiElectronApp.ipc.addListener('protocol-data-msg', this._listenOnProtocolMessages);
+        const removeSetDefaultServerListener
+            = window.jitsiElectronApp.ipc.addListener('set-default-server', this._onSetDefaultServer);
+
+        if (removeProtocolListener) {
+            this._listeners.push(removeProtocolListener);
+        }
+
+        if (removeSetDefaultServerListener) {
+            this._listeners.push(removeSetDefaultServerListener);
+        }
 
         // send notification to main process
         window.jitsiElectronApp.ipc.send('renderer-ready');
@@ -52,9 +65,17 @@ class App extends Component<IProps> {
      * @returns {void}
      */
     componentWillUnmount() {
-        if (this._removeListener) {
-            this._removeListener();
-        }
+        this._listeners.forEach(remove => remove());
+    }
+
+    /**
+     * Handler for the set-default-server IPC message from the main process.
+     *
+     * @param {string} serverURL - The default server URL passed via CLI.
+     * @returns {void}
+     */
+    _onSetDefaultServer(serverURL: string) {
+        this.props.dispatch(setServerURL(serverURL));
     }
 
 
