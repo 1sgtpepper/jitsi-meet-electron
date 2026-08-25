@@ -145,9 +145,10 @@ class Conference extends Component<IProps, IConferenceState> {
         const searchParameters = Object.fromEntries(url.searchParams);
         const hashParameters = parseURLParams(url);
 
+        const { jwt: jwtFromSearch, ...restSearchParameters } = searchParameters;
         const locale = { lng: i18n.language };
         const urlParameters = {
-            ...searchParameters,
+            ...restSearchParameters,
             ...locale
         };
 
@@ -163,7 +164,7 @@ class Conference extends Component<IProps, IConferenceState> {
         const interfaceConfigOverwrite = {
             SHOW_CHROME_EXTENSION_BANNER: false
         };
-        let jwt;
+        let jwt = jwtFromSearch;
 
         Object.entries(hashParameters).forEach(([ key, value ]) => {
             if (key.startsWith('config.')) {
